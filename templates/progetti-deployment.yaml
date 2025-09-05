@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-progetti
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: agata
+    service: agata-progetti
+spec:
+  replicas: {{ .Values.progetti.replicaCount }}
+  selector:
+    matchLabels:
+      app: agata
+      service: agata-progetti
+  template:
+    metadata:
+      labels:
+        app: agata
+        service: agata-progetti
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/progetti-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: agata-progetti
+          image: "{{ .Values.progetti.image.repository }}:{{ .Values.progetti.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-progetti-env
+          volumeMounts:
+            - mountPath: /app/config
+              name: config-volume
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-progetti-env
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-documenti
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: agata
+    service: agata-documenti
+spec:
+  replicas: {{ .Values.documenti.replicaCount }}
+  selector:
+    matchLabels:
+      app: agata
+      service: agata-documenti
+  template:
+    metadata:
+      labels:
+        app: agata
+        service: agata-documenti
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/documenti-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: agata-documenti
+          image: "{{ .Values.documenti.image.repository }}:{{ .Values.documenti.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-documenti-env
+          volumeMounts:
+            - mountPath: /app/config
+              name: config-volume
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-documenti-env
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}

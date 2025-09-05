@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-progetti-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: agata
+    service: agata-progetti
+data:
+  {{- range $key, $val := .Values.progetti.config }}
+  {{ $key }}: "{{ $val }}"
+  {{- end }}

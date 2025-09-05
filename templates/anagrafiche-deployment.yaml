@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-anagrafiche
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: agata
+    service: agata-anagrafiche
+spec:
+  replicas: {{ .Values.anagrafiche.replicaCount }}
+  selector:
+    matchLabels:
+      app: agata
+      service: agata-anagrafiche
+  template:
+    metadata:
+      labels:
+        app: agata
+        service: agata-anagrafiche
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/anagrafiche-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: agata-anagrafiche
+          image: "{{ .Values.anagrafiche.image.repository }}:{{ .Values.anagrafiche.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-anagrafiche-env
+          volumeMounts:
+            - mountPath: /app/config
+              name: config-volume
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-anagrafiche-env
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecret }}

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-documenti-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: agata
+    service: agata-documenti
+data:
+  {{- range $key, $val := .Values.documenti.config }}
+  {{ $key }}: "{{ $val }}"
+  {{- end }}

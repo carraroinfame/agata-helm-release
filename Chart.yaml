@@ -1,0 +1,6 @@
+apiVersion: v2
+name: agata-helm-release
+description: Helm chart per orchestrare i microservizi agata
+type: application
+version: 0.0.1
+appVersion: 1.0.0

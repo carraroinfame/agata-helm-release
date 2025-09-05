@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-anagrafiche-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: agata
+    service: agata-anagrafiche
+data:
+  {{- range $key, $val := .Values.anagrafiche.config }}
+  {{ $key }}: "{{ $val }}"
+  {{- end }}

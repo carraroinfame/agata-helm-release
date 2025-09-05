@@ -1,0 +1,120 @@
+anagrafiche:
+  image:
+    repository: technologyadvising/agata-anagrafiche
+    tag: 0.0.67a
+  replicaCount: 1
+
+  config:
+    MYSQL_URL: 'mysql.collaudo.svc.cluster.local'
+    MYSQL_PORT: '3306'
+    MYSQL_USERNAME: 'tamyusr'
+    MYSQL_PASSWORD: 'Dallara2024!'
+    CROSS_SERVICE_PROVIDER_HOST: 'cross-serviceprovider-manager'
+    CROSS_SERVICE_PROVIDER_PORT: '8443'
+    SPRING_APPLICATION_NAME: 'agata-anagrafiche'
+    DATABASE: 'agata_anagrafiche'
+    CONTEXT_PATH: '/api/anagrafiche'
+    SPRING_SECURITY_JWT_ISSUER: 'https://keycloaktalab.ddns.net/auth/realms/collaudo'
+
+  service:
+    type: ClusterIP
+    port: 8443
+    targetPort: 8088
+    
+frontend:
+  image:
+    repository: technologyadvising/agatafrontend
+    tag: 0.0.76
+  replicaCount: 1
+
+  config:
+    apipath: 'apipath'
+    apiEndpoint: 'https://agatacollaudo.talabservicescollaudo.it:8443'
+    apiAnagrafica: 'https://agatacollaudo.talabservicescollaudo.it'
+    apiCrossProvider: 'https://serviceprovidercollaudo.talabservicescollaudo.it'
+    urlFE: 'https://agatacollaudo.talabservicescollaudo.it'
+    KEYCLOAK_URL: https://keycloaktalab.ddns.net/auth
+    KEYCLOAK_REALM: collaudo
+    KEYCLOAK_CLIENT_ID: agata
+
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+    
+documenti:
+  image:
+    repository: technologyadvising/agata-documenti
+    tag: 0.0.4
+  replicaCount: 1
+  
+  config:
+    MYSQL_URL: 'mysql.collaudo.svc.cluster.local'
+    MYSQL_PORT: '3306'
+    MYSQL_USERNAME: 'tamyusr'
+    MYSQL_PASSWORD: 'Dallara2024!'
+    SPRING_APPLICATION_NAME: 'agata-documenti'
+    DATABASE: 'agata_documenti'
+    CONTEXT_PATH: '/api/documenti'
+    KEYCLOAK_ISSUER: 'https://keycloaktalab.ddns.net/auth/realms/collaudo'
+    
+  service:
+    type: ClusterIP
+    port: 8443
+    targetPort: 8080
+    
+progetti:
+  image:
+    repository: technologyadvising/agata-progetti
+    tag: 0.0.75
+  replicaCount: 1
+  
+  config:
+    MYSQL_URL: 'mysql.collaudo.svc.cluster.local'
+    MYSQL_PORT: '3306'
+    MYSQL_USERNAME: 'tamyusr'
+    MYSQL_PASSWORD: 'Dallara2024!'
+    SPRING_APPLICATION_NAME: 'agata-progetti'
+    DATABASE: 'agata_progetti'
+    CONTEXT_PATH: '/api/progetti'
+    
+  service:
+    type: ClusterIP
+    port: 8443
+    targetPort: 8080
+    
+ingress:
+  enabled: true
+  tls:
+    certResolver: letsencrypt
+  routes:
+    - match: Host(`agatacollaudo.talabservicescollaudo.it `) && PathPrefix(`/`)
+      service:
+        name: agata-frontend
+        port: 80
+
+    - match: Host(`agatacollaudo.talabservicescollaudo.it`) && PathPrefix(`/api/anagrafiche`)
+      service:
+        name: protciv-anagrafiche
+        port: 8443
+      middlewares:
+        - name: agata-anagrafiche-cors
+        - name: agata-oauth2-proxy-ws
+
+    - match: Host(`agatacollaudo.talabservicescollaudo.it`) && PathPrefix(`/api/documenti`)
+      service:
+        name: agata-documenti
+        port: 8443
+      middlewares:
+        - name: agata-anagrafiche-cors
+        - name: agata-oauth2-proxy-ws
+
+    - match: Host(`agatacollaudo.talabservicescollaudo.it`) && PathPrefix(`/api/progetti`)
+      service:
+        name: agata-progetti
+        port: 8443
+      middlewares:
+        - name: agata-anagrafiche-cors
+        - name: agata-oauth2-proxy-ws
+
+imagePullSecret: dockerhub-secret
